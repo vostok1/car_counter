@@ -64,7 +64,7 @@ int main(void) {
 	capVideo.read(imgFrame1);
 	capVideo.read(imgFrame2);
 
-	int intHorizontalLinePosition = (int)std::round((double)imgFrame1.rows * 0.65);
+	int intHorizontalLinePosition = (int)std::round((double)imgFrame1.rows * 0.35);
 
 	crossingLine[0].x = 0;
 	crossingLine[0].y = intHorizontalLinePosition;
@@ -99,7 +99,7 @@ int main(void) {
 
 		cv::threshold(imgDifference, imgThresh, 30, 255.0, CV_THRESH_BINARY);
 
-		cv::imshow("imgThresh", imgThresh);
+		//cv::imshow("imgThresh", imgThresh);
 
 		cv::Mat structuringElement3x3 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
 		cv::Mat structuringElement5x5 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
@@ -118,7 +118,7 @@ int main(void) {
 
 		cv::findContours(imgThreshCopy, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-		drawAndShowContours(imgThresh.size(), contours, "imgContours");
+		//drawAndShowContours(imgThresh.size(), contours, "imgContours");
 
 		std::vector<std::vector<cv::Point> > convexHulls(contours.size());
 
@@ -126,18 +126,17 @@ int main(void) {
 			cv::convexHull(contours[i], convexHulls[i]);
 		}
 
-		drawAndShowContours(imgThresh.size(), convexHulls, "imgConvexHulls");
+		//drawAndShowContours(imgThresh.size(), convexHulls, "imgConvexHulls");
 
 		for (auto &convexHull : convexHulls) {
 			Blob possibleBlob(convexHull);
 
-			if (possibleBlob.currentBoundingRect.area() > 200 &&
+			if (possibleBlob.currentBoundingRect.area() > 100 &&
 				possibleBlob.dblCurrentAspectRatio > 0.2 &&
-				possibleBlob.dblCurrentAspectRatio < 4.0 &&
-				possibleBlob.currentBoundingRect.width > 30 &&
-				possibleBlob.currentBoundingRect.width < 120 &&
-				possibleBlob.currentBoundingRect.height > 30 &&
-				possibleBlob.dblCurrentDiagonalSize > 60.0 &&
+				possibleBlob.dblCurrentAspectRatio <= 1.2 &&
+				possibleBlob.currentBoundingRect.width > 15 &&
+				possibleBlob.currentBoundingRect.height > 20 &&
+				possibleBlob.dblCurrentDiagonalSize >30.0 &&
 				(cv::contourArea(possibleBlob.currentContour) / (double)possibleBlob.currentBoundingRect.area()) > 0.50) {
 				currentFrameBlobs.push_back(possibleBlob);
 			}
@@ -154,7 +153,7 @@ int main(void) {
 			matchCurrentFrameBlobsToExistingBlobs(blobs, currentFrameBlobs);
 		}
 
-		drawAndShowContours(imgThresh.size(), blobs, "imgBlobs");
+		//drawAndShowContours(imgThresh.size(), blobs, "imgBlobs");
 
 		imgFrame2Copy = imgFrame2.clone();          // get another copy of frame 2 since we changed the previous frame 2 copy in the processing above
 
