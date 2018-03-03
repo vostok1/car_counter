@@ -60,7 +60,7 @@ int main(void) {
 		//_getch();                   // it may be necessary to change or remove this line if not using Windows
 		return(0);
 	}
-
+	printf("Frames per second: %i", capVideo.get(CV_CAP_PROP_FRAME_COUNT));
 	capVideo.read(imgFrame1);
 	capVideo.read(imgFrame2);
 
