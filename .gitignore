@@ -1,2 +1,16 @@
 
 \.vs/esoterismo/v15/
+
+*.tlog
+
+esoterismo/x64/Debug/main\.obj
+
+esoterismo/x64/Debug/vc141\.idb
+
+esoterismo/x64/Debug/vc141\.pdb
+
+x64/Debug/esoterismo\.exe
+
+x64/Debug/esoterismo\.ilk
+
+x64/Debug/esoterismo\.pdb
