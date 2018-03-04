@@ -14,3 +14,5 @@ x64/Debug/esoterismo\.exe
 x64/Debug/esoterismo\.ilk
 
 x64/Debug/esoterismo\.pdb
+
+*.db
