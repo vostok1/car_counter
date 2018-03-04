@@ -41,30 +41,27 @@ int main(void) {
 
 	std::vector<Blob> blobs;
 
-	cv::Point crossingLine[2];
+	cv::Point crossingLine[2]; //Una linea es conformada por dos puntos
 
 	int carCount = 0;
 	using namespace std::this_thread; // sleep_for, sleep_until
     using namespace std::chrono;
-
-	capVideo.open("pista4.mp4");
-
+	capVideo.open(1); //Use default
+	//printf("Frame count: %f", capVideo.get(CV_CAP_PROP_FRAME_COUNT));
 	if (!capVideo.isOpened()) {                                                 // if unable to open video file
-		std::cout << "error reading video file" << std::endl << std::endl;      // show error message
+		std::cout << "error reading camera" << std::endl << std::endl;      // show error message
 		//_getch();                   // it may be necessary to change or remove this line if not using Windows
 		return(0);                                                              // and exit program
 	}
-
-	if (capVideo.get(CV_CAP_PROP_FRAME_COUNT) < 2) {
-		std::cout << "error: video file must have at least two frames";
-		//_getch();                   // it may be necessary to change or remove this line if not using Windows
-		return(0);
-	}
-
 	capVideo.read(imgFrame1);
+	if (imgFrame1.empty()) {
+		printf("Cannot acces frame");
+	}
 	capVideo.read(imgFrame2);
-
-	int intHorizontalLinePosition = (int)std::round((double)imgFrame1.rows * 0.65);
+	if (imgFrame1.empty()) {
+		printf("Cannot acces frame2");
+	}
+	int intHorizontalLinePosition = (int)std::round((double)imgFrame1.rows * 0.35); //Porcentaje donde estara la linea en pantalla
 
 	crossingLine[0].x = 0;
 	crossingLine[0].y = intHorizontalLinePosition;
@@ -77,9 +74,7 @@ int main(void) {
 	bool blnFirstFrame = true;
 
 	int frameCount = 2;
-
-	while (capVideo.isOpened() && chCheckForEscKey != 27) {
-
+	while (1) {
 		std::vector<Blob> currentFrameBlobs;
 		sleep_for(nanoseconds(1));
     	sleep_until(system_clock::now() + microseconds(10000));
@@ -99,7 +94,7 @@ int main(void) {
 
 		cv::threshold(imgDifference, imgThresh, 30, 255.0, CV_THRESH_BINARY);
 
-		cv::imshow("imgThresh", imgThresh);
+		//cv::imshow("imgThresh", imgThresh);
 
 		cv::Mat structuringElement3x3 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
 		cv::Mat structuringElement5x5 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
@@ -118,7 +113,7 @@ int main(void) {
 
 		cv::findContours(imgThreshCopy, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-		drawAndShowContours(imgThresh.size(), contours, "imgContours");
+		//drawAndShowContours(imgThresh.size(), contours, "imgContours");
 
 		std::vector<std::vector<cv::Point> > convexHulls(contours.size());
 
@@ -126,18 +121,17 @@ int main(void) {
 			cv::convexHull(contours[i], convexHulls[i]);
 		}
 
-		drawAndShowContours(imgThresh.size(), convexHulls, "imgConvexHulls");
+		//drawAndShowContours(imgThresh.size(), convexHulls, "imgConvexHulls");
 
 		for (auto &convexHull : convexHulls) {
 			Blob possibleBlob(convexHull);
 
-			if (possibleBlob.currentBoundingRect.area() > 200 &&
+			if (possibleBlob.currentBoundingRect.area() > 100 &&
 				possibleBlob.dblCurrentAspectRatio > 0.2 &&
-				possibleBlob.dblCurrentAspectRatio < 4.0 &&
-				possibleBlob.currentBoundingRect.width > 30 &&
-				possibleBlob.currentBoundingRect.width < 120 &&
-				possibleBlob.currentBoundingRect.height > 30 &&
-				possibleBlob.dblCurrentDiagonalSize > 60.0 &&
+				possibleBlob.dblCurrentAspectRatio <= 1.2 &&
+				possibleBlob.currentBoundingRect.width > 15 &&
+				possibleBlob.currentBoundingRect.height > 20 &&
+				possibleBlob.dblCurrentDiagonalSize >30.0 &&
 				(cv::contourArea(possibleBlob.currentContour) / (double)possibleBlob.currentBoundingRect.area()) > 0.50) {
 				currentFrameBlobs.push_back(possibleBlob);
 			}
@@ -154,7 +148,7 @@ int main(void) {
 			matchCurrentFrameBlobsToExistingBlobs(blobs, currentFrameBlobs);
 		}
 
-		drawAndShowContours(imgThresh.size(), blobs, "imgBlobs");
+		//drawAndShowContours(imgThresh.size(), blobs, "imgBlobs");
 
 		imgFrame2Copy = imgFrame2.clone();          // get another copy of frame 2 since we changed the previous frame 2 copy in the processing above
 
@@ -172,23 +166,14 @@ int main(void) {
 		drawCarCountOnImage(carCount, imgFrame2Copy);
 
 		cv::imshow("imgFrame2Copy", imgFrame2Copy);
-
-		//cv::waitKey(0);                 // uncomment this line to go frame by frame for debugging
+		cv::waitKey(1);    
 
 		// now we prepare for the next iteration
 
 		currentFrameBlobs.clear();
 
 		imgFrame1 = imgFrame2.clone();           // move frame 1 up to where frame 2 is
-
-		if ((capVideo.get(CV_CAP_PROP_POS_FRAMES) + 1) < capVideo.get(CV_CAP_PROP_FRAME_COUNT)) {
-			capVideo.read(imgFrame2);
-		}
-		else {
-			std::cout << "end of video\n";
-			break;
-		}
-
+		capVideo.read(imgFrame2);
 		blnFirstFrame = false;
 		frameCount++;
 		chCheckForEscKey = cv::waitKey(1);
